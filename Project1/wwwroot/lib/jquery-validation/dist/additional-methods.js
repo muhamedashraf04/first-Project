@@ -718,7 +718,7 @@ $.validator.addMethod( "greaterThanEqual", function( value, element, param ) {
 }, "Please enter a greater value." );
 
 /**
- * IBAN is the international bank account number.
+ * IBAN is the InternBookational bank account number.
  * It has a country - specific format, that is checked here too
  *
  * Validation is case-insensitive. Please make sure to normalize input yourself.

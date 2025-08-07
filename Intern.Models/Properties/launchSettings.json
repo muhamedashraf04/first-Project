@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "InternBook.Models": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:57810;http://localhost:57811"
+    }
+  }
+}
