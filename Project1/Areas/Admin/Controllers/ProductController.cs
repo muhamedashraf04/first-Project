@@ -10,9 +10,11 @@ namespace InternBookWeb.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public ProductController(IUnitOfWork unitOfWork)
+        private readonly IWebHostEnvironment _webHostEnvironment; 
+        public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
+            _webHostEnvironment = webHostEnvironment;
         }
         public ActionResult Index()
         {
@@ -46,6 +48,7 @@ namespace InternBookWeb.Areas.Admin.Controllers
         [HttpPost]
         public ActionResult Upsert (ProductVM obj,IFormFile? file)
         {
+
             if (obj.Product.Title.ToLower() == obj.Product.ISBN.ToLower())
             {
                 ModelState.AddModelError("Title", "Title and ISBN Order cannot be the same");
@@ -65,6 +68,18 @@ namespace InternBookWeb.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
+                string WWWRootPath = _webHostEnvironment.WebRootPath;
+                if (file != null) 
+                {
+                    string filename = Guid.NewGuid().ToString()+ Path.GetExtension(file.FileName);
+                    string productpath=Path.Combine(WWWRootPath, @"Images\Product");
+
+                    using (var filestream = new FileStream(Path.Combine(productpath, filename), FileMode.Create))
+                    {
+                        file.CopyTo(filestream);
+                    }
+                    obj.Product.ImageURL = @"Images\Product" + filename;
+                }
                 _unitOfWork.Product.Add(obj.Product);
                 _unitOfWork.Save();
                 TempData["success"] = "Product added successfully";
