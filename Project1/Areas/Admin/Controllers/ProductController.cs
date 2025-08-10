@@ -3,6 +3,7 @@ using InternBook.Models;
 using InternBook.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 
 namespace InternBookWeb.Areas.Admin.Controllers
 {
@@ -18,7 +19,7 @@ namespace InternBookWeb.Areas.Admin.Controllers
         }
         public ActionResult Index()
         {
-            List<Product> ProductList= _unitOfWork.Product.GetAll().ToList();
+            List<Product> ProductList= _unitOfWork.Product.GetAll(IncludeProperties:"Category").ToList();
 
             return View(ProductList);
         }
@@ -73,14 +74,29 @@ namespace InternBookWeb.Areas.Admin.Controllers
                 {
                     string filename = Guid.NewGuid().ToString()+ Path.GetExtension(file.FileName);
                     string productpath=Path.Combine(WWWRootPath, @"Images\Product");
-
+                    if(!string.IsNullOrEmpty(obj.Product.ImageURL))
+                    {
+                        var oldImageUrl = Path.Combine(WWWRootPath, obj.Product.ImageURL.TrimStart('\\'));
+                        if(System.IO.File.Exists(oldImageUrl))
+                        {
+                            System.IO.File.Delete(oldImageUrl);
+                        }
+                    }
+                        
                     using (var filestream = new FileStream(Path.Combine(productpath, filename), FileMode.Create))
                     {
                         file.CopyTo(filestream);
                     }
-                    obj.Product.ImageURL = @"Images\Product" + filename;
+                    obj.Product.ImageURL = @"\Images\Product\" + filename;
                 }
-                _unitOfWork.Product.Add(obj.Product);
+                if (obj.Product.Id == 0) 
+                {
+                    _unitOfWork.Product.Add(obj.Product);
+                }
+                else
+                {
+                    _unitOfWork.Product.Update(obj.Product);
+                }
                 _unitOfWork.Save();
                 TempData["success"] = "Product added successfully";
                 return RedirectToAction("Index");
@@ -96,32 +112,32 @@ namespace InternBookWeb.Areas.Admin.Controllers
                 return View(obj);
             }
         }
+        #region API CALLS
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            var ProductList = _unitOfWork.Product.GetAll(IncludeProperties: "Category").ToList();
+            return Json(new { data=ProductList});
+        }
+        [HttpDelete]
         public IActionResult Delete(int? id)
         {
-            if (id == null || id == 0)
+            var ProductToBeDeleted = _unitOfWork.Product.Get(u => u.Id == id);
+            if(ProductToBeDeleted==null)
             {
-                return NotFound();
+                return Json(new {success=false, message="Error While Deleting"});
             }
-            Product? ProdFromDb = _unitOfWork.Product.Get(u => u.Id == id);
-            if (ProdFromDb == null)
+            var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath,
+                ProductToBeDeleted.ImageURL.TrimStart('\\'));
+            if (System.IO.File.Exists(oldImagePath))
             {
-                return NotFound();
+                System.IO.File.Delete(oldImagePath);
             }
-            return View(ProdFromDb);
-        }
-        [HttpPost, ActionName("Delete")]
-        public IActionResult DeletePost(int? id)
-        {
-            Product? obj = _unitOfWork.Product.Get(u => u.Id == id);
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
-            _unitOfWork.Product.Remove(obj);
+            _unitOfWork.Product.Remove(ProductToBeDeleted);
             _unitOfWork.Save();
-            TempData["success"] = "Category Deleted successfully";
-            return RedirectToAction("Index");
-        }
 
+            return Json(new { success = true, message = "Deleted Successfully" });
+        }
+        #endregion
     }
 }

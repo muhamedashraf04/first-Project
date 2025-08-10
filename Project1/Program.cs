@@ -1,8 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using InternBook.DataAccess.Data;
-using InternBook.DataAccess.Repository.IRepository;
 using InternBook.DataAccess.Repository;
+using InternBook.DataAccess.Repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 
