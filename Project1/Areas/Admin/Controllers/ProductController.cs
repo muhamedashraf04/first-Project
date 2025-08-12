@@ -122,10 +122,10 @@ namespace InternBookWeb.Areas.Admin.Controllers
         [HttpDelete]
         public IActionResult Delete(int? id)
         {
-            var ProductToBeDeleted = _unitOfWork.Product.Get(u => u.Id == id);
+            Product ProductToBeDeleted = _unitOfWork.Product.Get(u => u.Id == id);
             if(ProductToBeDeleted==null)
             {
-                return Json(new {success=false, message="Error While Deleting"});
+                return Json(new {success=false, Message="Error While Deleting"});
             }
             var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath,
                 ProductToBeDeleted.ImageURL.TrimStart('\\'));
